@@ -65,46 +65,73 @@ async function generatePitchDeck(
   const { jsPDF } = await import('jspdf');
   const doc = new jsPDF();
   
-  // Set up basic styling
+  let currentY = 30;
+  const lineHeight = 6;
+  const pageWidth = 190; // Leave margins on both sides
+  
+  // Title
   doc.setFontSize(20);
-  doc.text('PITCH DECK', 20, 30);
+  doc.text('PITCH DECK', 105, currentY, { align: 'center' });
+  currentY += 25;
   
-  // Problem slide
+  // Slide 1: Problem
   doc.setFontSize(16);
-  doc.text('SLIDE 1: THE PROBLEM', 20, 50);
-  doc.setFontSize(12);
+  doc.text('SLIDE 1: THE PROBLEM', 20, currentY);
+  currentY += 12;
   
-  // Split long text into lines that fit the page
-  const problemLines = doc.splitTextToSize(problemStatement, 170);
-  doc.text(problemLines, 20, 65);
+  doc.setFontSize(12);
+  const problemLines = doc.splitTextToSize(problemStatement, pageWidth - 40);
+  problemLines.forEach((line: string) => {
+    doc.text(line, 20, currentY);
+    currentY += lineHeight;
+  });
+  currentY += 8;
   
   // Market insight
-  const marketText = `Market Insight: ${marketResearch.summary.slice(0, 200)}...`;
-  const marketLines = doc.splitTextToSize(marketText, 170);
-  doc.text(marketLines, 20, 85 + (problemLines.length * 5));
+  const marketText = `Market Insight: ${marketResearch.summary.slice(0, 250)}...`;
+  const marketLines = doc.splitTextToSize(marketText, pageWidth - 40);
+  marketLines.forEach((line: string) => {
+    doc.text(line, 20, currentY);
+    currentY += lineHeight;
+  });
+  currentY += 15;
   
-  // Solution slide
+  // Slide 2: Solution
   doc.setFontSize(16);
-  const solutionY = 105 + (problemLines.length * 5) + (marketLines.length * 5);
-  doc.text('SLIDE 2: OUR SOLUTION', 20, solutionY);
+  doc.text('SLIDE 2: OUR SOLUTION', 20, currentY);
+  currentY += 12;
+  
   doc.setFontSize(12);
-  doc.text('Key Features:', 20, solutionY + 15);
+  doc.text('Key Features:', 20, currentY);
+  currentY += 10;
   
   const mvpFeatures = features.filter(f => f.priority === 'mvp').slice(0, 3);
   mvpFeatures.forEach((feature, i) => {
-    const featureText = `${i + 1}. ${feature.title}: ${feature.description}`;
-    const featureLines = doc.splitTextToSize(featureText, 160);
-    doc.text(featureLines, 25, solutionY + 30 + (i * 15));
+    const featureTitle = `${i + 1}. ${feature.title}`;
+    doc.text(featureTitle, 25, currentY);
+    currentY += lineHeight;
+    
+    const featureDescLines = doc.splitTextToSize(feature.description, pageWidth - 60);
+    featureDescLines.forEach((line: string) => {
+      doc.text(line, 30, currentY);
+      currentY += lineHeight;
+    });
+    currentY += 4;
   });
+  currentY += 10;
   
-  // The Ask slide
+  // Slide 3: The Ask
   doc.setFontSize(16);
-  const askY = solutionY + 80;
-  doc.text('SLIDE 3: THE ASK', 20, askY);
+  doc.text('SLIDE 3: THE ASK', 20, currentY);
+  currentY += 12;
+  
   doc.setFontSize(12);
   const askText = "We're seeking seed funding to develop our MVP and capture market share in this growing industry. Contact us to learn more about this opportunity.";
-  const askLines = doc.splitTextToSize(askText, 170);
-  doc.text(askLines, 20, askY + 15);
+  const askLines = doc.splitTextToSize(askText, pageWidth - 40);
+  askLines.forEach((line: string) => {
+    doc.text(line, 20, currentY);
+    currentY += lineHeight;
+  });
 
   // Convert to base64
   const pdfBlob = doc.output('arraybuffer');
