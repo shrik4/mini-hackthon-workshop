@@ -32,29 +32,82 @@ class FileGenerationService:
         market_research: MarketResearch, 
         features: List[Feature]
     ) -> str:
-        """Generate a simple text-based pitch deck as base64 encoded PDF"""
+        """Generate a proper PDF pitch deck using reportlab"""
         
-        # Simple text-based PDF content (in a real app, you'd use a proper PDF library)
-        pdf_content = f"""
-PITCH DECK: {problem_statement.split(' ')[:4]}
-
-SLIDE 1: THE PROBLEM
-{problem_statement}
-
-Market Insight: {market_research.summary[:200]}...
-
-SLIDE 2: OUR SOLUTION
-Key Features:
-{self._format_mvp_features(features)}
-
-SLIDE 3: THE ASK
-We're seeking seed funding to develop our MVP and capture market share in this growing industry.
-
-Contact us to learn more about this opportunity.
-"""
+        from reportlab.lib.pagesizes import letter
+        from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+        from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+        from reportlab.lib.units import inch
+        from io import BytesIO
         
-        # Convert to base64 (in a real app, you'd use a proper PDF library)
-        return base64.b64encode(pdf_content.encode('utf-8')).decode('utf-8')
+        # Create a BytesIO buffer to hold the PDF
+        buffer = BytesIO()
+        
+        # Create PDF document
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        styles = getSampleStyleSheet()
+        
+        # Custom styles
+        title_style = ParagraphStyle(
+            'Title',
+            parent=styles['Heading1'],
+            fontSize=20,
+            spaceAfter=30,
+            alignment=1  # Center alignment
+        )
+        
+        slide_title_style = ParagraphStyle(
+            'SlideTitle',
+            parent=styles['Heading2'],
+            fontSize=16,
+            spaceAfter=12,
+            textColor='darkblue'
+        )
+        
+        # Build the content
+        story = []
+        
+        # Title
+        story.append(Paragraph("PITCH DECK", title_style))
+        story.append(Spacer(1, 0.2*inch))
+        
+        # Slide 1: The Problem
+        story.append(Paragraph("SLIDE 1: THE PROBLEM", slide_title_style))
+        story.append(Paragraph(problem_statement, styles['Normal']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # Market insight
+        market_text = f"Market Insight: {market_research.summary[:200]}..."
+        story.append(Paragraph(market_text, styles['Normal']))
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Slide 2: Solution
+        story.append(Paragraph("SLIDE 2: OUR SOLUTION", slide_title_style))
+        story.append(Paragraph("Key Features:", styles['Normal']))
+        story.append(Spacer(1, 0.1*inch))
+        
+        # MVP features
+        mvp_features = [f for f in features if f.priority == 'mvp'][:3]
+        for i, feature in enumerate(mvp_features, 1):
+            feature_text = f"{i}. <b>{feature.title}</b>: {feature.description}"
+            story.append(Paragraph(feature_text, styles['Normal']))
+            story.append(Spacer(1, 0.05*inch))
+        
+        story.append(Spacer(1, 0.3*inch))
+        
+        # Slide 3: The Ask
+        story.append(Paragraph("SLIDE 3: THE ASK", slide_title_style))
+        ask_text = "We're seeking seed funding to develop our MVP and capture market share in this growing industry. Contact us to learn more about this opportunity."
+        story.append(Paragraph(ask_text, styles['Normal']))
+        
+        # Build PDF
+        doc.build(story)
+        
+        # Get PDF data and encode to base64
+        pdf_data = buffer.getvalue()
+        buffer.close()
+        
+        return base64.b64encode(pdf_data).decode('utf-8')
     
     def _sanitize_project_name(self, problem_statement: str) -> str:
         """Convert problem statement to a valid project name"""
