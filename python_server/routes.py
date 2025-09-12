@@ -6,7 +6,7 @@ import uuid
 from datetime import datetime
 import asyncio
 
-from database import get_db, Generation as DBGeneration
+from database import get_db, SessionLocal, Generation as DBGeneration
 from models import (
     GenerationRequest, GenerationResponse, GenerationDetail, 
     Feature, MarketResearch
@@ -42,8 +42,7 @@ async def create_generation(
         run_generation_process,
         generation_id,
         request.problem_statement,
-        request.api_key,
-        db
+        request.api_key
     )
     
     return GenerationResponse(generationId=generation_id)
@@ -103,10 +102,10 @@ async def download_file(generation_id: str, file_type: str, db: Session = Depend
 async def run_generation_process(
     generation_id: str,
     problem_statement: str,
-    api_key: str,
-    db: Session
+    api_key: str
 ):
     """Background task to run the full generation process"""
+    db = SessionLocal()
     try:
         # Update status to generating
         generation = db.query(DBGeneration).filter(
@@ -171,6 +170,8 @@ async def run_generation_process(
             "status": "failed"
         })
         db.commit()
+    finally:
+        db.close()
 
 
 # Auth endpoints (placeholder)
