@@ -1,5 +1,5 @@
 import { type Feature } from "@shared/schema";
-import * as archiver from "archiver";
+import archiver from "archiver";
 import { Readable } from "stream";
 
 export async function generateReactScaffold(

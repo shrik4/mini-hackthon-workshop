@@ -1,7 +1,6 @@
 import { storage } from "../storage";
 import { analyzeMarket, generateFeatures } from "./gemini";
-import { generateReactScaffold } from "./react-scaffold";
-import { generatePitchDeck } from "./pitch-deck";
+import { generateReactScaffold } from "../templates/react-scaffold";
 import { type MarketResearch, type Feature } from "@shared/schema";
 
 export async function generateComplete(

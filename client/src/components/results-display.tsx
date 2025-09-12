@@ -28,7 +28,7 @@ export function ResultsDisplay({ generation, onNewGeneration }: ResultsDisplayPr
     ? JSON.parse(generation.marketResearch) 
     : { summary: "", competitors: [] };
     
-  const features: Feature[] = generation.features || [];
+  const features: Feature[] = Array.isArray(generation.features) ? generation.features as Feature[] : [];
   const mvpFeatures = features.filter(f => f.priority === "mvp");
   const stretchFeatures = features.filter(f => f.priority === "stretch");
 

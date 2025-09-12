@@ -11,6 +11,7 @@ import { Rocket, Key, Lightbulb, Shield } from "lucide-react";
 import { GenerationProgress } from "@/components/generation-progress";
 import { ResultsDisplay } from "@/components/results-display";
 import { Typewriter } from "@/components/typewriter";
+import type { Generation } from "@shared/schema";
 
 export default function Home() {
   const [problemStatement, setProblemStatement] = useState("");
@@ -39,11 +40,22 @@ export default function Home() {
     },
   });
 
-  const { data: generation } = useQuery({
+  const { data: generation } = useQuery<Generation>({
     queryKey: ["/api/generation", generationId],
     enabled: !!generationId,
-    refetchInterval: generationId && generation?.status !== "completed" && generation?.status !== "failed" ? 2000 : false,
+    refetchInterval: 2000,
+    refetchIntervalInBackground: false,
   });
+
+  // Stop refetching when generation is completed or failed
+  const shouldStopRefetching = generation?.status === "completed" || generation?.status === "failed";
+  const { data: finalGeneration } = useQuery<Generation>({
+    queryKey: ["/api/generation", generationId],
+    enabled: !!generationId && shouldStopRefetching,
+    refetchInterval: false,
+  });
+
+  const currentGeneration = shouldStopRefetching ? finalGeneration : generation;
 
   const handleGenerate = (e: React.FormEvent) => {
     e.preventDefault();
@@ -165,17 +177,17 @@ export default function Home() {
         </section>
 
         {/* Generation Progress */}
-        {generationId && generation && generation.status !== "completed" && generation.status !== "failed" && (
-          <GenerationProgress generation={generation} />
+        {generationId && currentGeneration && currentGeneration.status !== "completed" && currentGeneration.status !== "failed" && (
+          <GenerationProgress generation={currentGeneration} />
         )}
 
         {/* Results Display */}
-        {generationId && generation && generation.status === "completed" && (
-          <ResultsDisplay generation={generation} onNewGeneration={handleNewGeneration} />
+        {generationId && currentGeneration && currentGeneration.status === "completed" && (
+          <ResultsDisplay generation={currentGeneration} onNewGeneration={handleNewGeneration} />
         )}
 
         {/* Error State */}
-        {generationId && generation && generation.status === "failed" && (
+        {generationId && currentGeneration && currentGeneration.status === "failed" && (
           <Card className="bg-destructive/10 border-destructive/20">
             <CardHeader>
               <CardTitle className="text-destructive">Generation Failed</CardTitle>
