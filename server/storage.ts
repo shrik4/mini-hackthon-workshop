@@ -46,6 +46,7 @@ export class MemStorage implements IStorage {
       features: null,
       scaffoldZip: null,
       pitchDeckPdf: null,
+      hackathonScore: null,
       status: "pending",
       createdAt: new Date(),
       completedAt: null,

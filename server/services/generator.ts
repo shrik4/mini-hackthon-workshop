@@ -1,6 +1,7 @@
 import { storage } from "../storage";
 import { analyzeMarket, generateFeatures } from "./gemini";
 import { generateReactScaffold } from "../templates/react-scaffold";
+import { generateHackathonScore } from "./judgeAI";
 import { type MarketResearch, type Feature } from "@shared/schema";
 
 export async function generateComplete(
@@ -38,10 +39,15 @@ export async function generateComplete(
     console.log(`[${generationId}] Generating pitch deck...`);
     const pitchDeckPdf = await generatePitchDeck(problemStatement, marketResearch, features);
 
+    // Step 5: Hackathon Scoring (Judge Mode)
+    console.log(`[${generationId}] Generating hackathon score...`);
+    const hackathonScore = await generateHackathonScore(problemStatement, marketResearch, features, apiKey);
+
     // Final update
     await storage.updateGeneration(generationId, {
       scaffoldZip,
       pitchDeckPdf,
+      hackathonScore: JSON.stringify(hackathonScore),
       status: "completed",
       completedAt: new Date(),
     });

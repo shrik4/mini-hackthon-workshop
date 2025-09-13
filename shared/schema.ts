@@ -16,6 +16,7 @@ export const generations = pgTable("generations", {
   features: jsonb("features"),
   scaffoldZip: text("scaffold_zip"), // base64 encoded zip
   pitchDeckPdf: text("pitch_deck_pdf"), // base64 encoded pdf
+  hackathonScore: jsonb("hackathon_score"), // AI-generated hackathon evaluation
   status: text("status").notNull().default("pending"), // pending, generating, completed, failed
   createdAt: timestamp("created_at").defaultNow().notNull(),
   completedAt: timestamp("completed_at"),
@@ -59,11 +60,31 @@ export interface Feature {
   complexity: number;
 }
 
+export interface HackathonScore {
+  overallScore: number; // 0-10
+  originality: {
+    score: number; // 0-10
+    feedback: string;
+  };
+  feasibility: {
+    score: number; // 0-10
+    feedback: string;
+  };
+  marketFit: {
+    score: number; // 0-10
+    feedback: string;
+  };
+  summary: string; // Overall judge feedback
+  strengths: string[];
+  improvements: string[];
+}
+
 export interface GenerationResult {
   id: string;
   marketResearch: MarketResearch;
   features: Feature[];
   scaffoldZip: string; // base64
   pitchDeckPdf: string; // base64
+  hackathonScore?: HackathonScore;
   status: string;
 }
