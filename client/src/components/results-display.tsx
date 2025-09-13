@@ -14,7 +14,8 @@ import {
   Rocket,
   Github
 } from "lucide-react";
-import type { Generation, MarketResearch, Feature } from "@shared/schema";
+import type { Generation, MarketResearch, Feature, HackathonScore } from "@shared/schema";
+import HackathonScoreDisplay from "./HackathonScore";
 
 interface ResultsDisplayProps {
   generation: Generation;
@@ -31,6 +32,10 @@ export function ResultsDisplay({ generation, onNewGeneration }: ResultsDisplayPr
   const features: Feature[] = Array.isArray(generation.features) ? generation.features as Feature[] : [];
   const mvpFeatures = features.filter(f => f.priority === "mvp");
   const stretchFeatures = features.filter(f => f.priority === "stretch");
+  
+  const hackathonScore: HackathonScore | null = generation.hackathonScore 
+    ? JSON.parse(generation.hackathonScore as string) 
+    : null;
 
   const handleDownload = (type: "zip" | "pdf") => {
     window.open(`/api/generation/${generation.id}/download/${type}`, "_blank");
@@ -38,6 +43,23 @@ export function ResultsDisplay({ generation, onNewGeneration }: ResultsDisplayPr
 
   return (
     <div className="space-y-8">
+      {/* Judge Mode - Hackathon Score */}
+      {hackathonScore && (
+        <Card className="bg-gradient-to-r from-purple-50 to-blue-50 border-purple-200 shadow-lg">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold text-center text-purple-800">
+              🏆 Judge Mode: AI Hackathon Evaluation
+            </CardTitle>
+            <p className="text-center text-purple-600">
+              Auto-scored by AI • Would make judges go 🤯
+            </p>
+          </CardHeader>
+          <CardContent>
+            <HackathonScoreDisplay score={hackathonScore} />
+          </CardContent>
+        </Card>
+      )}
+
       {/* Market Research Results */}
       <Card className="bg-card border-border">
         <CardHeader className="flex flex-row items-center justify-between">
